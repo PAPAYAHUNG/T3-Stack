@@ -12,11 +12,12 @@ import Link from "next/link";
 import { api } from "~/utils/api";
 
 const Home: NextPage = () => {
-  // const hello = api.example.hello.useQuery({ text: "from tRPC" });
+  const { data } = api.post.getAll.useQuery();
+  console.log({ data });
   const { user, isLoaded, isSignedIn } = useUser();
 
-  console.log({isSignedIn});
-  
+  console.log({ isSignedIn });
+
   return (
     <>
       <Head>
@@ -27,6 +28,7 @@ const Home: NextPage = () => {
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           {isSignedIn ? <SignOutButton /> : <SignInButton />}
+          {data && data.map((item) => <div key={item.id}>{item.content}</div>)}
         </div>
       </main>
     </>
