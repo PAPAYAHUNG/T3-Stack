@@ -1,22 +1,72 @@
-import {
-  SignInButton,
-  SignOutButton,
-  SignUp,
-  SignUpButton,
-  useUser,
-} from "@clerk/nextjs";
+import { SignInButton, useUser } from "@clerk/nextjs";
+import type { Post } from "@prisma/client";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { type NextPage } from "next";
 import Head from "next/head";
-import Link from "next/link";
+import Image from "next/image";
+import Loading from "~/components/Loading";
 
 import { api } from "~/utils/api";
 
-const Home: NextPage = () => {
-  const { data } = api.post.getAll.useQuery();
-  console.log({ data });
-  const { user, isLoaded, isSignedIn } = useUser();
+dayjs.extend(relativeTime);
 
-  console.log({ isSignedIn });
+interface PostProps {
+  post: Post;
+  author: {
+    id: string;
+    profileImageUrl: string;
+    username: string | null;
+  };
+}
+
+const Home: NextPage = () => {
+  const { data, isLoading } = api.post.getAll.useQuery();
+  console.log({ data });
+  const { user, isSignedIn } = useUser();
+  console.log({ user });
+
+  if (isLoading) return <Loading />;
+
+  if (!data) return <p>Something went wrong</p>;
+
+  const renderPost = (item: PostProps) => {
+    const { post, author } = item || {};
+    return (
+      <div className="flex items-center justify-start gap-3" key={post.id}>
+        <Image
+          src={author.profileImageUrl}
+          alt="user-logo"
+          className="h-12 w-12 rounded-full"
+          width={48}
+          height={48}
+        />
+        <div>{post.content}</div>
+        <div className="font-thin text-slate-300">
+          {dayjs(post.createdAt).fromNow()}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTweetZone = () => {
+    return (
+      <div className="flex items-center justify-start gap-3" key={user?.id}>
+        <Image
+          src={user?.profileImageUrl as string}
+          alt="user-logo"
+          className="h-12 w-12 rounded-full"
+          width={48}
+          height={48}
+        />
+        <input
+          type="text"
+          placeholder="Let's tweet something"
+          className="rounded-sm p-2 outline-none"
+        />
+      </div>
+    );
+  };
 
   return (
     <>
@@ -27,8 +77,10 @@ const Home: NextPage = () => {
       </Head>
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-          {isSignedIn ? <SignOutButton /> : <SignInButton />}
-          {data && data.map((item) => <div key={item.id}>{item.content}</div>)}
+          <div className="rounded border border-slate-400 p-2">
+            {isSignedIn ? renderTweetZone() : <SignInButton />}
+          </div>
+          {data && data.map((item) => renderPost(item))}
         </div>
       </main>
     </>
