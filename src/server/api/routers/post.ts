@@ -3,7 +3,11 @@ import type { Post } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from "~/server/api/trpc";
 import { RouterOutputs } from "~/utils/api";
 
 type PostWithUser = RouterOutputs["post"]["getAll"];
@@ -46,7 +50,31 @@ const addUserDataToPosts = async (posts: Post[]) => {
 
 export const postRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const post = await ctx.prisma.post.findMany();
+    const post = await ctx.prisma.post.findMany({
+      take:100,
+      orderBy:{
+        createdAt:'desc'
+      }
+    });
     return addUserDataToPosts(post);
   }),
+
+  create: protectedProcedure
+    .input(
+      z.object({
+        content: z.string().min(1).max(100),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const authorId = ctx.userId;
+
+      const post = await ctx.prisma.post.create({
+        data: {
+          authorId,
+          content: input.content
+        },
+      });
+
+      return post
+    }),
 });

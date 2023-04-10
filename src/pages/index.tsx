@@ -5,6 +5,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
+import { useState } from "react";
 import Loading from "~/components/Loading";
 
 import { api } from "~/utils/api";
@@ -22,8 +23,18 @@ interface PostProps {
 
 const Home: NextPage = () => {
   const { data, isLoading } = api.post.getAll.useQuery();
+  const [input, setInput] = useState("");
   console.log({ data });
   const { user, isSignedIn } = useUser();
+
+  const ctx = api.useContext();
+  const { mutate } = api.post.create.useMutation({
+    onSuccess: async () => {
+      setInput("");
+      await ctx.post.getAll.invalidate();
+    },
+  });
+
   console.log({ user });
 
   if (isLoading) return <Loading />;
@@ -63,7 +74,19 @@ const Home: NextPage = () => {
           type="text"
           placeholder="Let's tweet something"
           className="rounded-sm p-2 outline-none"
+          value={input}
+          onChange={(e) => {
+            setInput(e.target.value);
+          }}
         />
+        <button
+          onClick={() => {
+            mutate({ content: input });
+          }}
+          className="bg-gray-300"
+        >
+          Submit
+        </button>
       </div>
     );
   };
