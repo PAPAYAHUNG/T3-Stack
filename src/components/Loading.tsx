@@ -1,10 +1,14 @@
 import React from "react";
 
-const Loading = () => {
+const Loading = ({ type = "full" }: { type?: "full" | "normal" }) => {
   return (
     <div
       role="status"
-      className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center"
+      className={
+        type === "full"
+          ? `absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center`
+          : "flex items-center justify-center"
+      }
     >
       <svg
         aria-hidden="true"

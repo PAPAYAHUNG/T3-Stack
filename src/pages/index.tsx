@@ -6,6 +6,7 @@ import { type NextPage } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import Loading from "~/components/Loading";
 
 import { api } from "~/utils/api";
@@ -28,10 +29,19 @@ const Home: NextPage = () => {
   const { user, isSignedIn } = useUser();
 
   const ctx = api.useContext();
-  const { mutate } = api.post.create.useMutation({
+  const { mutate, isLoading: isPostingLoading } = api.post.create.useMutation({
     onSuccess: async () => {
       setInput("");
       await ctx.post.getAll.invalidate();
+    },
+    onError: (e) => {
+      console.log("hehe", e.data?.zodError);
+      const errorMessage = e.data?.zodError?.fieldErrors?.content;
+      if (errorMessage && errorMessage[0]) {
+        toast.error(errorMessage[0]);
+      } else {
+        toast.error("Please input from 5 letters");
+      }
     },
   });
 
@@ -75,18 +85,24 @@ const Home: NextPage = () => {
           placeholder="Let's tweet something"
           className="rounded-sm p-2 outline-none"
           value={input}
+          disabled={isLoading}
           onChange={(e) => {
             setInput(e.target.value);
           }}
         />
-        <button
-          onClick={() => {
-            mutate({ content: input });
-          }}
-          className="bg-gray-300"
-        >
-          Submit
-        </button>
+        {isPostingLoading ? (
+          <Loading type="normal" />
+        ) : (
+          <button
+            onClick={() => {
+              mutate({ content: input });
+            }}
+            disabled={input === ""}
+            className="bg-gray-300"
+          >
+            Submit
+          </button>
+        )}
       </div>
     );
   };
