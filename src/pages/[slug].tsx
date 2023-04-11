@@ -14,7 +14,7 @@ const PostingList = ({ userId }: { userId: string }) => {
   });
 
   console.log("data from new", data);
-
+  
   return (
     <div className="flex flex-col">
       {data?.map((item) => {
