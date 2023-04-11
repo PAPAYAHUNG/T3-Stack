@@ -9,7 +9,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import Loading from "~/components/Loading";
-
 import { api } from "~/utils/api";
 
 dayjs.extend(relativeTime);
